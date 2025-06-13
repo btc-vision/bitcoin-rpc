@@ -1,7 +1,7 @@
 {
     "name": "@btc-vision/bitcoin-rpc",
     "type": "module",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "The one and only fully typed Bitcoin RPC client for Node.js",
     "main": "build/index.js",
     "types": "build/index.d.ts",
@@ -25,12 +25,12 @@
     "author": "BlobMaster41",
     "license": "MIT",
     "devDependencies": {
-        "@babel/preset-env": "^7.26.7",
-        "@types/node": "^22.13.0",
-        "eslint": "^9.19.0",
-        "prettier": "3.4.2",
-        "typescript": "^5.7.3",
-        "typescript-eslint": "^8.22.0"
+        "@babel/preset-env": "^7.27.2",
+        "@types/node": "^24.0.1",
+        "eslint": "^9.28.0",
+        "prettier": "3.5.3",
+        "typescript": "^5.8.3",
+        "typescript-eslint": "^8.34.0"
     },
     "repository": {
         "type": "git",
@@ -44,16 +44,16 @@
         "btc"
     ],
     "dependencies": {
-        "@eslint/js": "^9.19.0",
-        "@btc-vision/bsi-common": "^1.0.23",
+        "@eslint/js": "^9.28.0",
+        "@btc-vision/bsi-common": "^1.1.0",
         "gulp": "^5.0.0",
         "gulp-cached": "^1.1.1",
         "gulp-logger": "^0.0.2",
         "gulp-typescript": "^6.0.0-alpha.1",
         "gulp-clean": "^0.4.0",
         "gulp-eslint-new": "^2.4.0",
-        "rpc-request": "^8.0.0",
+        "rpc-request": "^8.0.1",
         "ts-node": "^10.9.2",
-        "undici": "^7.3.0"
+        "undici": "^7.10.0"
     }
 }

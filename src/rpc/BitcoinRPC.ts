@@ -24,7 +24,11 @@ import { AddressByLabel } from './types/AddressByLabel.js';
 
 import { RPCConfig } from './interfaces/RPCConfig.js';
 import { BasicBlockInfo } from './types/BasicBlockInfo.js';
-import { BitcoinRawTransactionParams, RawTransaction } from './types/BitcoinRawTransaction.js';
+import {
+    BitcoinRawTransactionParams,
+    IRawTransaction,
+    RawTransaction,
+} from './types/BitcoinRawTransaction.js';
 import { BitcoinVerbosity } from './types/BitcoinVerbosity.js';
 import { BlockchainInfo } from './types/BlockchainInfo.js';
 import { BlockData, BlockDataWithTransactionData } from './types/BlockData.js';
@@ -506,6 +510,31 @@ export class BitcoinRPC extends Logger {
             })) as string | null;
 
         return txId || null;
+    }
+
+    public async decodeRawTransaction(
+        hexString: string,
+        isWitness: boolean = false,
+    ): Promise<IRawTransaction | null> {
+        this.debugMessage(`decodeRawTransaction ${hexString}`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const params: { hexstring: string; iswitness?: boolean } = {
+            hexstring: hexString,
+            iswitness: isWitness,
+        };
+
+        const rawTx: IRawTransaction | null = (await this.rpc
+            .decoderawtransaction(params)
+            .catch((e: unknown) => {
+                this.error(`Error decoding raw transaction: ${e}`);
+                return null;
+            })) as IRawTransaction | null;
+
+        return rawTx || null;
     }
 
     public async dumpPrivateKey(address: string, wallet?: string): Promise<string | null> {
