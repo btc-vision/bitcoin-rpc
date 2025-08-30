@@ -400,6 +400,20 @@ interface DefinedUnsuccessfulFetch extends UnsuccessfulFetch {
     data: JSONRPCResult;
 }
 
+const voidMethods = [
+    'invalidateblock',
+    'reconsiderblock',
+    'preciousblock',
+    'abandontransaction',
+    'importprivkey',
+    'savemempool',
+    'walletlock',
+    'walletpassphrase',
+    'clearbanned',
+    'ping',
+    'setban',
+];
+
 export class RPCClient extends RESTClient {
     wallet?: string;
     fullResponse?: boolean;
@@ -431,7 +445,7 @@ export class RPCClient extends RESTClient {
                 throw this.fullResponse ? response.error : new Error(response.error.message);
             }
 
-            if (!response.result) {
+            if (!response.result && !voidMethods.includes(method)) {
                 throw new Error('No result');
             }
 
