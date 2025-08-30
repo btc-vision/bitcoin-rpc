@@ -1,34 +1,51 @@
 import { Logger } from '@btc-vision/bsi-common';
 import {
+    AddPeerAddressParams,
     Blockhash,
+    CreateWalletDescriptorParams,
     CreateWalletParams,
     EstimateSmartFeeParams,
+    GenerateBlockParams,
+    GenerateParams,
+    GetBestBlockHeaderParams,
     GetBlockFilterParams,
     GetBlockHeaderParams,
     GetBlockParams,
     GetBlockStatsParams,
     GetChainTxStatsParams,
+    GetDeploymentInfoParams,
+    GetHDKeysParams,
+    GetIndexInfoParams,
+    GetMempoolEntryByIdParams,
     GetMemPoolParams,
+    GetNodeAddressesParams,
     GetRawTransactionParams,
     GetTxOutParams,
     GetTxOutProofParams,
     Height,
+    ImportDescriptorsParams,
+    ListDescriptorsParams,
+    MigrateWalletParams,
+    PsbtBumpFeeParams,
     RPCClient,
     RPCIniOptions,
+    SendAllParams,
+    SendMsgToPeerParams,
+    SendParams,
     SendRawTransactionParams,
+    SimulateRawTransactionParams,
+    SubmitPackageParams,
     TxId,
+    UpgradeWalletParams,
     Verbose,
+    VerifyChainLockParams,
 } from './external/rpc.js';
 
 import { AddressByLabel } from './types/AddressByLabel.js';
 
 import { RPCConfig } from './interfaces/RPCConfig.js';
 import { BasicBlockInfo } from './types/BasicBlockInfo.js';
-import {
-    BitcoinRawTransactionParams,
-    IRawTransaction,
-    RawTransaction,
-} from './types/BitcoinRawTransaction.js';
+import { BitcoinRawTransactionParams, IRawTransaction, RawTransaction, } from './types/BitcoinRawTransaction.js';
 import { BitcoinVerbosity } from './types/BitcoinVerbosity.js';
 import { BlockchainInfo } from './types/BlockchainInfo.js';
 import { BlockData, BlockDataWithTransactionData } from './types/BlockData.js';
@@ -40,14 +57,32 @@ import { ChainTxStats } from './types/ChainTxStats.js';
 import { CreateWalletResponse } from './types/CreateWalletResponse.js';
 import { FeeEstimation, SmartFeeEstimation } from './types/FeeEstimation.js';
 import { MempoolInfo } from './types/MempoolInfo.js';
-import {
-    MemPoolTransactionInfo,
-    RawMemPoolTransactionInfo,
-} from './types/MemPoolTransactionInfo.js';
+import { MemPoolTransactionInfo, RawMemPoolTransactionInfo, } from './types/MemPoolTransactionInfo.js';
 import { TransactionOutputInfo } from './types/TransactionOutputInfo.js';
 import { TransactionOutputSetInfo } from './types/TransactionOutputSetInfo.js';
 import { WalletInfo } from './types/WalletInfo.js';
 import { RawMempool } from './types/RawMempool.js';
+import {
+    BestBlockHeader,
+    ChainLockVerification,
+    DeploymentInfo,
+    GenerateBlockResult,
+    HDKeyInfo,
+    ImportDescriptorsResult,
+    IndexInfo,
+    ListDescriptorsResult,
+    MempoolEntryById,
+    MigrateWalletResult,
+    NodeAddress,
+    PackageResult,
+    PeerAddressResult,
+    PsbtBumpFeeResult,
+    SendAllResult,
+    SendResult,
+    SimulateTransactionResult,
+    UpgradeWalletResult,
+    WalletDescriptor,
+} from './types/NewMethods.js';
 
 export class BitcoinRPC extends Logger {
     public readonly logColor: string = '#fa9600';
@@ -117,6 +152,554 @@ export class BitcoinRPC extends Logger {
             })) as BlockData[] | null;
 
         return blockData || null;
+    }
+
+    /**
+     * @description Returns the header of the best (tip) block in the longest blockchain.
+     */
+    public async getBestBlockHeader(
+        verbose: boolean = true,
+    ): Promise<BestBlockHeader | string | null> {
+        this.debugMessage('getBestBlockHeader');
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const params: GetBestBlockHeaderParams = { verbose };
+
+        const result = await this.rpc.getbestblockheader(params).catch((e: unknown) => {
+            this.error(`Error getting best block header: ${e}`);
+            return null;
+        });
+
+        return result as BestBlockHeader | string | null;
+    }
+
+    /**
+     * @description Returns an object containing various state info regarding deployments of consensus changes.
+     */
+    public async getDeploymentInfo(blockHash?: string): Promise<DeploymentInfo | null> {
+        this.debugMessage(`getDeploymentInfo ${blockHash || 'tip'}`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const params: GetDeploymentInfoParams = blockHash ? { blockhash: blockHash } : {};
+
+        const result = await this.rpc.getdeploymentinfo(params).catch((e: unknown) => {
+            this.error(`Error getting deployment info: ${e}`);
+            return null;
+        });
+
+        return result as DeploymentInfo | null;
+    }
+
+    /**
+     * @description Returns mempool data for given transaction by wtxid
+     */
+    public async getMempoolEntryById(wtxid: string): Promise<MempoolEntryById | null> {
+        this.debugMessage(`getMempoolEntryById ${wtxid}`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const params: GetMempoolEntryByIdParams = { wtxid };
+
+        const result = await this.rpc.getmempoolentrybyid(params).catch((e: unknown) => {
+            this.error(`Error getting mempool entry by id: ${e}`);
+            return null;
+        });
+
+        return result as MempoolEntryById | null;
+    }
+
+    /**
+     * @description Mine up to nblocks blocks immediately to an address in the wallet.
+     * @deprecated Use generateToAddress instead
+     */
+    public async generate(
+        nBlocks: number,
+        maxTries?: number,
+        wallet?: string,
+    ): Promise<string[] | null> {
+        this.debugMessage(`generate ${nBlocks} blocks`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const params: GenerateParams = {
+            nblocks: nBlocks,
+            maxtries: maxTries,
+        };
+
+        const result = await this.rpc.generate(params, wallet).catch((e: unknown) => {
+            this.error(`Error generating blocks: ${e}`);
+            return null;
+        });
+
+        return result as string[] | null;
+    }
+
+    /**
+     * @description Mine a block with a set of ordered transactions immediately to a specified address.
+     */
+    public async generateBlock(
+        output: string,
+        transactions: string[] = [],
+        submit: boolean = true,
+    ): Promise<GenerateBlockResult | null> {
+        this.debugMessage(`generateBlock to ${output}`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const params: GenerateBlockParams = {
+            output,
+            transactions,
+            submit,
+        };
+
+        const result = await this.rpc.generateblock(params).catch((e: unknown) => {
+            this.error(`Error generating block: ${e}`);
+            return null;
+        });
+
+        return result as GenerateBlockResult | null;
+    }
+
+    /**
+     * @description Add the address of a potential peer to the address manager.
+     */
+    public async addPeerAddress(
+        address: string,
+        port: number,
+        tried: boolean = false,
+    ): Promise<PeerAddressResult | null> {
+        this.debugMessage(`addPeerAddress ${address}:${port}`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const params: AddPeerAddressParams = { address, port, tried };
+
+        const result = await this.rpc.addpeeraddress(params).catch((e: unknown) => {
+            this.error(`Error adding peer address: ${e}`);
+            return null;
+        });
+
+        return result as PeerAddressResult | null;
+    }
+
+    /**
+     * @description Return known addresses which can potentially be used to find new nodes in the network
+     */
+    public async getNodeAddresses(count?: number): Promise<NodeAddress[] | null> {
+        this.debugMessage(`getNodeAddresses ${count || 'default'}`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const params: GetNodeAddressesParams = count ? { count } : {};
+
+        const result = await this.rpc.getnodeaddresses(params).catch((e: unknown) => {
+            this.error(`Error getting node addresses: ${e}`);
+            return null;
+        });
+
+        return result as NodeAddress[] | null;
+    }
+
+    /**
+     * @description Send a p2p message to a peer specified by id.
+     */
+    public async sendMsgToPeer(peerId: number, msgType: string, data: string): Promise<void> {
+        this.debugMessage(`sendMsgToPeer to peer ${peerId}`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const params: SendMsgToPeerParams = {
+            peer_id: peerId,
+            msg_type: msgType,
+            data,
+        };
+
+        await this.rpc.sendmsgtopeer(params).catch((e: unknown) => {
+            this.error(`Error sending message to peer: ${e}`);
+            throw e;
+        });
+    }
+
+    /**
+     * @description Submit a package of raw transactions to local node.
+     */
+    public async submitPackage(
+        packageTxs: string[],
+        maxFeeRate?: number | string,
+        maxBurnAmount?: number | string,
+    ): Promise<PackageResult | null> {
+        this.debugMessage(`submitPackage with ${packageTxs.length} transactions`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const params: SubmitPackageParams = {
+            package: packageTxs,
+            maxfeerate: maxFeeRate,
+            maxburnamount: maxBurnAmount,
+        };
+
+        const result = await this.rpc.submitpackage(params).catch((e: unknown) => {
+            this.error(`Error submitting package: ${e}`);
+            return null;
+        });
+
+        return result as PackageResult | null;
+    }
+
+    /**
+     * @description Returns the status of one or all available indices.
+     */
+    public async getIndexInfo(indexName?: string): Promise<IndexInfo | null> {
+        this.debugMessage(`getIndexInfo ${indexName || 'all'}`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const params: GetIndexInfoParams = indexName ? { index_name: indexName } : {};
+
+        const result = await this.rpc.getindexinfo(params).catch((e: unknown) => {
+            this.error(`Error getting index info: ${e}`);
+            return null;
+        });
+
+        return result as IndexInfo | null;
+    }
+
+    /**
+     * @description Verifies that a ChainLock is valid for the block.
+     */
+    public async verifyChainLock(
+        blockHash: string,
+        signature: string,
+        height: number,
+    ): Promise<ChainLockVerification | null> {
+        this.debugMessage(`verifyChainLock for block ${blockHash}`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const params: VerifyChainLockParams = {
+            blockhash: blockHash,
+            signature,
+            height,
+        };
+
+        const result = await this.rpc.verifychainlock(params).catch((e: unknown) => {
+            this.error(`Error verifying chainlock: ${e}`);
+            return null;
+        });
+
+        return result as ChainLockVerification | null;
+    }
+
+    /**
+     * @description Create a new descriptor for the wallet.
+     */
+    public async createWalletDescriptor(
+        type: 'wpkh' | 'pkh' | 'sh' | 'tr',
+        internal?: boolean,
+        hdkey?: string,
+        wallet?: string,
+    ): Promise<WalletDescriptor | null> {
+        this.debugMessage(`createWalletDescriptor type: ${type}`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const params: CreateWalletDescriptorParams = {
+            type,
+            internal,
+            hdkey,
+        };
+
+        const result = await this.rpc.createwalletdescriptor(params, wallet).catch((e: unknown) => {
+            this.error(`Error creating wallet descriptor: ${e}`);
+            return null;
+        });
+
+        return result as WalletDescriptor | null;
+    }
+
+    /**
+     * @description List all BIP 32 HD keys in the wallet.
+     */
+    public async getHDKeys(
+        activeOnly: boolean = false,
+        privateKeys: boolean = false,
+        wallet?: string,
+    ): Promise<HDKeyInfo[] | null> {
+        this.debugMessage(`getHDKeys`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const params: GetHDKeysParams = {
+            active_only: activeOnly,
+            private: privateKeys,
+        };
+
+        const result = await this.rpc.gethdkeys(params, wallet).catch((e: unknown) => {
+            this.error(`Error getting HD keys: ${e}`);
+            return null;
+        });
+
+        return result as HDKeyInfo[] | null;
+    }
+
+    /**
+     * @description Import descriptors to the wallet.
+     */
+    public async importDescriptors(
+        requests: ImportDescriptorsParams['requests'],
+        wallet?: string,
+    ): Promise<ImportDescriptorsResult | null> {
+        this.debugMessage(`importDescriptors with ${requests.length} descriptors`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const params: ImportDescriptorsParams = { requests };
+
+        const result = await this.rpc.importdescriptors(params, wallet).catch((e: unknown) => {
+            this.error(`Error importing descriptors: ${e}`);
+            return null;
+        });
+
+        return result as ImportDescriptorsResult | null;
+    }
+
+    /**
+     * @description List descriptors imported into a descriptor-enabled wallet.
+     */
+    public async listDescriptors(
+        includePrivate: boolean = false,
+        wallet?: string,
+    ): Promise<ListDescriptorsResult | null> {
+        this.debugMessage(`listDescriptors`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const params: ListDescriptorsParams = { private: includePrivate };
+
+        const result = await this.rpc.listdescriptors(params, wallet).catch((e: unknown) => {
+            this.error(`Error listing descriptors: ${e}`);
+            return null;
+        });
+
+        return result as ListDescriptorsResult | null;
+    }
+
+    /**
+     * @description Migrate a legacy wallet to a descriptor wallet.
+     */
+    public async migrateWallet(
+        walletName?: string,
+        passphrase?: string,
+    ): Promise<MigrateWalletResult | null> {
+        this.debugMessage(`migrateWallet ${walletName || 'default'}`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const params: MigrateWalletParams = {
+            wallet_name: walletName,
+            passphrase,
+        };
+
+        const result = await this.rpc.migratewallet(params).catch((e: unknown) => {
+            this.error(`Error migrating wallet: ${e}`);
+            return null;
+        });
+
+        return result as MigrateWalletResult | null;
+    }
+
+    /**
+     * @description Entirely clears and refills the keypool.
+     */
+    public async newKeypool(wallet?: string): Promise<void> {
+        this.debugMessage(`newKeypool`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        await this.rpc.newkeypool(wallet).catch((e: unknown) => {
+            this.error(`Error creating new keypool: ${e}`);
+            throw e;
+        });
+    }
+
+    /**
+     * @description Bumps the fee of an opt-in-RBF transaction, replacing it with a new transaction.
+     */
+    public async psbtBumpFee(
+        txid: string,
+        options?: PsbtBumpFeeParams['options'],
+        wallet?: string,
+    ): Promise<PsbtBumpFeeResult | null> {
+        this.debugMessage(`psbtBumpFee for ${txid}`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const params: PsbtBumpFeeParams = { txid, options };
+
+        const result = await this.rpc.psbtbumpfee(params, wallet).catch((e: unknown) => {
+            this.error(`Error bumping fee with PSBT: ${e}`);
+            return null;
+        });
+
+        return result as PsbtBumpFeeResult | null;
+    }
+
+    /**
+     * @description Send a transaction with advanced options.
+     */
+    public async send(
+        outputs: SendParams['outputs'],
+        options?: {
+            confTarget?: number;
+            estimateMode?: 'UNSET' | 'ECONOMICAL' | 'CONSERVATIVE';
+            feeRate?: number | string;
+            advancedOptions?: SendParams['options'];
+        },
+        wallet?: string,
+    ): Promise<SendResult | null> {
+        this.debugMessage(`send transaction`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const params: SendParams = {
+            outputs,
+            conf_target: options?.confTarget,
+            estimate_mode: options?.estimateMode,
+            fee_rate: options?.feeRate,
+            options: options?.advancedOptions,
+        };
+
+        const result = await this.rpc.send(params, wallet).catch((e: unknown) => {
+            this.error(`Error sending transaction: ${e}`);
+            return null;
+        });
+
+        return result as SendResult | null;
+    }
+
+    /**
+     * @description Send all outputs from the wallet.
+     */
+    public async sendAll(
+        recipients: SendAllParams['recipients'],
+        options?: {
+            confTarget?: number;
+            estimateMode?: 'UNSET' | 'ECONOMICAL' | 'CONSERVATIVE';
+            feeRate?: number | string;
+            advancedOptions?: SendAllParams['options'];
+        },
+        wallet?: string,
+    ): Promise<SendAllResult | null> {
+        this.debugMessage(`sendAll transaction`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const params: SendAllParams = {
+            recipients,
+            conf_target: options?.confTarget,
+            estimate_mode: options?.estimateMode,
+            fee_rate: options?.feeRate,
+            options: options?.advancedOptions,
+        };
+
+        const result = await this.rpc.sendall(params, wallet).catch((e: unknown) => {
+            this.error(`Error sending all: ${e}`);
+            return null;
+        });
+
+        return result as SendAllResult | null;
+    }
+
+    /**
+     * @description Simulate raw transactions.
+     */
+    public async simulateRawTransaction(
+        rawTxs: string[] = [],
+        includeWatchOnly: boolean = false,
+        wallet?: string,
+    ): Promise<SimulateTransactionResult | null> {
+        this.debugMessage(`simulateRawTransaction`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const params: SimulateRawTransactionParams = {
+            rawtxs: rawTxs,
+            options: { include_watchonly: includeWatchOnly },
+        };
+
+        const result = await this.rpc.simulaterawtransaction(params, wallet).catch((e: unknown) => {
+            this.error(`Error simulating transaction: ${e}`);
+            return null;
+        });
+
+        return result as SimulateTransactionResult | null;
+    }
+
+    /**
+     * @description Upgrade the wallet to a newer version.
+     */
+    public async upgradeWallet(
+        version?: number,
+        wallet?: string,
+    ): Promise<UpgradeWalletResult | null> {
+        this.debugMessage(`upgradeWallet to version ${version || 'latest'}`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const params: UpgradeWalletParams = version ? { version } : {};
+
+        const result = await this.rpc.upgradewallet(params, wallet).catch((e: unknown) => {
+            this.error(`Error upgrading wallet: ${e}`);
+            return null;
+        });
+
+        return result as UpgradeWalletResult | null;
     }
 
     public async getBlockAsHexString(blockHash: string): Promise<string | null> {

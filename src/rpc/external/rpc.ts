@@ -400,6 +400,145 @@ interface DefinedUnsuccessfulFetch extends UnsuccessfulFetch {
     data: JSONRPCResult;
 }
 
+export type GetBestBlockHeaderParams = Verbose;
+
+export type GetDeploymentInfoParams = { blockhash?: string };
+
+export type GetMempoolEntryByIdParams = { wtxid: string };
+
+export type GenerateBlockParams = {
+    output: string;
+    transactions?: string[];
+    submit?: boolean;
+};
+
+export type AddPeerAddressParams = {
+    address: string;
+    port: number;
+    tried?: boolean;
+};
+
+export type GetNodeAddressesParams = { count?: number };
+
+export type SendMsgToPeerParams = {
+    peer_id: number;
+    msg_type: string;
+    data: string;
+};
+
+export type SubmitPackageParams = {
+    package: string[];
+    maxfeerate?: number | string;
+    maxburnamount?: number | string;
+};
+
+export type GetIndexInfoParams = { index_name?: string };
+
+export type VerifyChainLockParams = {
+    blockhash: string;
+    signature: string;
+    height: number;
+};
+
+export type CreateWalletDescriptorParams = {
+    type: 'wpkh' | 'pkh' | 'sh' | 'tr';
+    internal?: boolean;
+    hdkey?: string;
+};
+
+export type GetHDKeysParams = {
+    active_only?: boolean;
+    private?: boolean;
+};
+
+export type ImportDescriptorRequest = {
+    desc: string;
+    timestamp: number | 'now';
+    active?: boolean;
+    range?: number | [number, number];
+    next_index?: number;
+    internal?: boolean;
+    label?: string;
+};
+
+export type ImportDescriptorsParams = {
+    requests: ImportDescriptorRequest[];
+};
+
+export type ListDescriptorsParams = { private?: boolean };
+
+export type MigrateWalletParams = {
+    wallet_name?: string;
+    passphrase?: string;
+};
+
+export type PsbtBumpFeeParams = {
+    txid: string;
+    options?: EstimateMode & {
+        conf_target?: number;
+        fee_rate?: number | string;
+        replaceable?: boolean;
+        outputs?: Array<{ [address: string]: number | string }>;
+        reduce_output?: number;
+    };
+};
+
+export type SendParams = {
+    outputs: Array<{ [address: string]: number | string }>;
+    conf_target?: number;
+    estimate_mode?: 'UNSET' | 'ECONOMICAL' | 'CONSERVATIVE';
+    fee_rate?: number | string;
+    options?: {
+        add_inputs?: boolean;
+        include_unsafe?: boolean;
+        add_to_wallet?: boolean;
+        change_address?: string;
+        change_position?: number;
+        change_type?: string;
+        fee_rate?: number | string;
+        include_watching?: boolean;
+        inputs?: Array<{ txid: string; vout: number; weight?: number }>;
+        lock_unspents?: boolean;
+        locktime?: number;
+        max_tx_weight?: number;
+        psbt?: boolean;
+        subtract_fee_from_outputs?: number[];
+        conf_target?: number;
+        replaceable?: boolean;
+    };
+};
+
+export type SendAllParams = {
+    recipients: Array<{ [address: string]: number | string }> | string[];
+    conf_target?: number;
+    estimate_mode?: 'UNSET' | 'ECONOMICAL' | 'CONSERVATIVE';
+    fee_rate?: number | string;
+    options?: {
+        add_to_wallet?: boolean;
+        fee_rate?: number | string;
+        include_watching?: boolean;
+        inputs?: Array<{ txid: string; vout: number; weight?: number }>;
+        lock_unspents?: boolean;
+        locktime?: number;
+        max_tx_weight?: number;
+        minconf?: number;
+        maxconf?: number;
+        psbt?: boolean;
+        send_max?: boolean;
+        conf_target?: number;
+        replaceable?: boolean;
+    };
+};
+
+export type SimulateRawTransactionParams = {
+    rawtxs?: string[];
+    options?: {
+        include_watchonly?: boolean;
+    };
+};
+
+export type UpgradeWalletParams = { version?: number };
+
 const voidMethods = [
     'invalidateblock',
     'reconsiderblock',
@@ -753,10 +892,172 @@ export class RPCClient extends RESTClient {
     }
 
     /**
+     * @description Returns the header of the best (tip) block in the longest blockchain.
+     */
+    getbestblockheader({ verbose = true }: GetBestBlockHeaderParams = {}) {
+        return this.rpc('getbestblockheader', { verbose });
+    }
+
+    /**
+     * @description Returns an object containing various state info regarding deployments of consensus changes.
+     */
+    getdeploymentinfo({ blockhash }: GetDeploymentInfoParams = {}) {
+        return this.rpc('getdeploymentinfo', { blockhash });
+    }
+
+    /**
+     * @description Returns mempool data for given transaction by wtxid
+     */
+    getmempoolentrybyid({ wtxid }: GetMempoolEntryByIdParams) {
+        return this.rpc('getmempoolentrybyid', { wtxid });
+    }
+
+    /**
+     * @description Mine up to nblocks blocks immediately (before the RPC call returns) to an address in the wallet.
+     * @deprecated Use generatetoaddress instead
+     */
+    generate({ nblocks, maxtries }: GenerateParams, wallet?: string) {
+        return this.rpc('generate', { nblocks, maxtries }, wallet || this.wallet);
+    }
+
+    /**
+     * @description Mine a block with a set of ordered transactions immediately to a specified address.
+     */
+    generateblock({ output, transactions = [], submit = true }: GenerateBlockParams) {
+        return this.rpc('generateblock', { output, transactions, submit });
+    }
+
+    /**
+     * @description Add the address of a potential peer to the address manager.
+     */
+    addpeeraddress({ address, port, tried = false }: AddPeerAddressParams) {
+        return this.rpc('addpeeraddress', { address, port, tried });
+    }
+
+    /**
+     * @description Send a p2p message to a peer specified by id.
+     */
+    sendmsgtopeer({ peer_id, msg_type, data }: SendMsgToPeerParams) {
+        return this.rpc('sendmsgtopeer', { peer_id, msg_type, data });
+    }
+
+    /**
+     * @description Submit a package of raw transactions to local node.
+     */
+    submitpackage({ package: pkg, maxfeerate, maxburnamount }: SubmitPackageParams) {
+        return this.rpc('submitpackage', { package: pkg, maxfeerate, maxburnamount });
+    }
+
+    /**
      * @description Mine blocks immediately to a specified address (before the RPC call returns)
      */
     generatetoaddress(options: GenerateToAddressParams, wallet?: string) {
         return this.rpc('generatetoaddress', options, wallet || this.wallet);
+    }
+
+    /**
+     * @description Returns the status of one or all available indices.
+     */
+    getindexinfo({ index_name }: GetIndexInfoParams = {}) {
+        return this.rpc('getindexinfo', { index_name });
+    }
+
+    /**
+     * @description Verifies that a ChainLock is valid for the block.
+     */
+    verifychainlock({ blockhash, signature, height }: VerifyChainLockParams) {
+        return this.rpc('verifychainlock', { blockhash, signature, height });
+    }
+
+    /**
+     * @description Create a new descriptor for the wallet.
+     */
+    createwalletdescriptor(options: CreateWalletDescriptorParams, wallet?: string) {
+        return this.rpc('createwalletdescriptor', options, wallet || this.wallet);
+    }
+
+    /**
+     * @description List all BIP 32 HD keys in the wallet.
+     */
+    gethdkeys(options: GetHDKeysParams = {}, wallet?: string) {
+        return this.rpc('gethdkeys', options, wallet || this.wallet);
+    }
+
+    /**
+     * @description Import descriptors to the wallet.
+     */
+    importdescriptors({ requests }: ImportDescriptorsParams, wallet?: string) {
+        return this.rpc('importdescriptors', { requests }, wallet || this.wallet);
+    }
+
+    /**
+     * @description List descriptors imported into a descriptor-enabled wallet.
+     */
+    listdescriptors({ private: priv = false }: ListDescriptorsParams = {}, wallet?: string) {
+        return this.rpc('listdescriptors', { private: priv }, wallet || this.wallet);
+    }
+
+    /**
+     * @description Migrate a legacy wallet to a descriptor wallet.
+     */
+    migratewallet({ wallet_name, passphrase }: MigrateWalletParams = {}) {
+        return this.rpc('migratewallet', { wallet_name, passphrase });
+    }
+
+    /**
+     * @description Entirely clears and refills the keypool.
+     */
+    newkeypool(wallet?: string) {
+        return this.rpc('newkeypool', undefined, wallet || this.wallet);
+    }
+
+    /**
+     * @description Bumps the fee of an opt-in-RBF transaction, replacing it with a new transaction.
+     */
+    psbtbumpfee(options: PsbtBumpFeeParams, wallet?: string) {
+        return this.rpc('psbtbumpfee', options, wallet || this.wallet);
+    }
+
+    /**
+     * @description Send a transaction with advanced options.
+     */
+    send({ outputs, conf_target, estimate_mode, fee_rate, options }: SendParams, wallet?: string) {
+        return this.rpc(
+            'send',
+            { outputs, conf_target, estimate_mode, fee_rate, options },
+            wallet || this.wallet,
+        );
+    }
+
+    /**
+     * @description Send all outputs from the wallet.
+     */
+    sendall(
+        { recipients, conf_target, estimate_mode, fee_rate, options }: SendAllParams,
+        wallet?: string,
+    ) {
+        return this.rpc(
+            'sendall',
+            { recipients, conf_target, estimate_mode, fee_rate, options },
+            wallet || this.wallet,
+        );
+    }
+
+    /**
+     * @description Simulate raw transactions.
+     */
+    simulaterawtransaction(
+        { rawtxs = [], options = {} }: SimulateRawTransactionParams = {},
+        wallet?: string,
+    ) {
+        return this.rpc('simulaterawtransaction', { rawtxs, options }, wallet || this.wallet);
+    }
+
+    /**
+     * @description Upgrade the wallet to a newer version.
+     */
+    upgradewallet({ version }: UpgradeWalletParams = {}, wallet?: string) {
+        return this.rpc('upgradewallet', { version }, wallet || this.wallet);
     }
 
     /**
@@ -856,8 +1157,8 @@ export class RPCClient extends RESTClient {
     /**
      * @description Return known addresses which can potentially be used to find new nodes in the network
      */
-    getnodeaddresses(options = {}) {
-        return this.rpc('getnodeaddresses', options);
+    getnodeaddresses({ count }: GetNodeAddressesParams = {}) {
+        return this.rpc('getnodeaddresses', { count });
     }
 
     /**

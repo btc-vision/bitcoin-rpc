@@ -20,3 +20,4 @@ export * from './rpc/types/RawMempool.js';
 export * from './rpc/types/FeeEstimation.js';
 
 export * from './rpc/BitcoinRPC.js';
+export * from './rpc/types/NewMethods.js';
