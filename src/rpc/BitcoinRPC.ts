@@ -45,7 +45,11 @@ import { AddressByLabel } from './types/AddressByLabel.js';
 
 import { RPCConfig } from './interfaces/RPCConfig.js';
 import { BasicBlockInfo } from './types/BasicBlockInfo.js';
-import { BitcoinRawTransactionParams, IRawTransaction, RawTransaction, } from './types/BitcoinRawTransaction.js';
+import {
+    BitcoinRawTransactionParams,
+    IRawTransaction,
+    RawTransaction,
+} from './types/BitcoinRawTransaction.js';
 import { BitcoinVerbosity } from './types/BitcoinVerbosity.js';
 import { BlockchainInfo } from './types/BlockchainInfo.js';
 import { BlockData, BlockDataWithTransactionData } from './types/BlockData.js';
@@ -57,7 +61,10 @@ import { ChainTxStats } from './types/ChainTxStats.js';
 import { CreateWalletResponse } from './types/CreateWalletResponse.js';
 import { FeeEstimation, SmartFeeEstimation } from './types/FeeEstimation.js';
 import { MempoolInfo } from './types/MempoolInfo.js';
-import { MemPoolTransactionInfo, RawMemPoolTransactionInfo, } from './types/MemPoolTransactionInfo.js';
+import {
+    MemPoolTransactionInfo,
+    RawMemPoolTransactionInfo,
+} from './types/MemPoolTransactionInfo.js';
 import { TransactionOutputInfo } from './types/TransactionOutputInfo.js';
 import { TransactionOutputSetInfo } from './types/TransactionOutputSetInfo.js';
 import { WalletInfo } from './types/WalletInfo.js';
