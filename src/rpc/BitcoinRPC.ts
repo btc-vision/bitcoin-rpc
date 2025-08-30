@@ -475,6 +475,40 @@ export class BitcoinRPC extends Logger {
         });
     }
 
+    public async invalidateBlock(blockHash: string): Promise<void> {
+        this.debugMessage(`invalidateBlock ${blockHash}`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const param = {
+            blockhash: blockHash,
+        };
+
+        await this.rpc.invalidateblock(param).catch((e: unknown) => {
+            this.error(`Error invalidating block: ${e}`);
+            throw e;
+        });
+    }
+
+    public async reconsiderBlock(blockHash: string): Promise<void> {
+        this.debugMessage(`reconsiderBlock ${blockHash}`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const param = {
+            blockhash: blockHash,
+        };
+
+        await this.rpc.reconsiderblock(param).catch((e: unknown) => {
+            this.error(`Error reconsidering block: ${e}`);
+            throw e;
+        });
+    }
+
     public async getAddressByLabel(label: string, wallet?: string): Promise<AddressByLabel | null> {
         this.debugMessage(`getAddressByLabel ${label}`);
 

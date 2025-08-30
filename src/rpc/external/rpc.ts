@@ -1226,6 +1226,22 @@ export class RPCClient extends RESTClient {
     }
 
     /**
+     * @description Permanently marks a block as invalid, as if it violated a consensus rule.
+     * This will mark the block and all of its descendants as invalid.
+     */
+    invalidateblock({ blockhash }: Blockhash) {
+        return this.rpc('invalidateblock', { blockhash });
+    }
+
+    /**
+     * @description Removes invalidity status of a block and its descendants, reconsider them for activation.
+     * This can be used to undo the effects of invalidateblock.
+     */
+    reconsiderblock({ blockhash }: Blockhash) {
+        return this.rpc('reconsiderblock', { blockhash });
+    }
+
+    /**
      * @description Adds an address or script (in hex) that can be watched as if it were in your wallet but cannot be used to spend.
      */
     importaddress(options: ImportAddressParams, wallet?: string) {
