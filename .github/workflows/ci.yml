@@ -1,4 +1,4 @@
-name: CI for BSIBITCOINRPC
+name: CI for BITCOINRPC
 
 on:
   push:
@@ -20,19 +20,23 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
+          node-version: '24.x'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Update npm
+        run: npm install -g npm@latest
+
       - name: Install dependencies
-        run: yarn install
+        run: npm install
 
       - name: Build the project
-        run: yarn build
+        run: npm run build
+
+      - name: Build browser assets
+        run: npm run browserBuild
 
       - name: Publish to npm
-        run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
@@ -40,6 +44,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           release_name: Release ${{ github.ref_name }}
           body: |
-            Automated release for BSIBITCOINRPC.
+            Automated release for BITCOINRPC.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
