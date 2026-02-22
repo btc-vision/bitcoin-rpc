@@ -3,6 +3,7 @@ import { RESTClient, RESTIniOptions } from './rest.js';
 import { BlockData } from '../types/BlockData.js';
 import { RawTransaction } from '../types/BitcoinRawTransaction.js';
 import { BitcoinVerbosity } from '../types/BitcoinVerbosity.js';
+import { BlockTemplateCapability, BlockTemplateRule } from '../types/BlockTemplate.js';
 
 export type RPCIniOptions = RESTIniOptions & {
     user?: string;
@@ -65,11 +66,16 @@ export type GenerateParams = { nblocks: number; maxtries?: number };
 
 export type GenerateToAddressParams = GenerateParams & { address: string };
 
+export enum GetBlockTemplateMode {
+    TEMPLATE = 'template',
+    PROPOSAL = 'proposal',
+}
+
 export type GetBlockTemplateParams = {
     template_request: {
-        mode?: 'template' | 'proposal';
-        capabilities?: string[];
-        rules: string[];
+        mode?: GetBlockTemplateMode;
+        capabilities?: BlockTemplateCapability[];
+        rules: BlockTemplateRule[];
     };
 };
 

@@ -12,6 +12,7 @@ import {
     GetBlockHeaderParams,
     GetBlockParams,
     GetBlockStatsParams,
+    GetBlockTemplateParams,
     GetChainTxStatsParams,
     GetDeploymentInfoParams,
     GetHDKeysParams,
@@ -45,11 +46,7 @@ import { AddressByLabel } from './types/AddressByLabel.js';
 
 import { RPCConfig } from './interfaces/RPCConfig.js';
 import { BasicBlockInfo } from './types/BasicBlockInfo.js';
-import {
-    BitcoinRawTransactionParams,
-    IRawTransaction,
-    RawTransaction,
-} from './types/BitcoinRawTransaction.js';
+import { BitcoinRawTransactionParams, IRawTransaction, RawTransaction, } from './types/BitcoinRawTransaction.js';
 import { BitcoinVerbosity } from './types/BitcoinVerbosity.js';
 import { BlockchainInfo } from './types/BlockchainInfo.js';
 import { BlockData, BlockDataWithTransactionData } from './types/BlockData.js';
@@ -61,10 +58,7 @@ import { ChainTxStats } from './types/ChainTxStats.js';
 import { CreateWalletResponse } from './types/CreateWalletResponse.js';
 import { FeeEstimation, SmartFeeEstimation } from './types/FeeEstimation.js';
 import { MempoolInfo } from './types/MempoolInfo.js';
-import {
-    MemPoolTransactionInfo,
-    RawMemPoolTransactionInfo,
-} from './types/MemPoolTransactionInfo.js';
+import { MemPoolTransactionInfo, RawMemPoolTransactionInfo, } from './types/MemPoolTransactionInfo.js';
 import { TransactionOutputInfo } from './types/TransactionOutputInfo.js';
 import { TransactionOutputSetInfo } from './types/TransactionOutputSetInfo.js';
 import { WalletInfo } from './types/WalletInfo.js';
@@ -90,6 +84,7 @@ import {
     UpgradeWalletResult,
     WalletDescriptor,
 } from './types/NewMethods.js';
+import { BlockTemplate } from './types/BlockTemplate.js';
 
 export class BitcoinRPC extends Logger {
     public readonly logColor: string = '#fa9600';
@@ -563,6 +558,37 @@ export class BitcoinRPC extends Logger {
             this.error(`Error creating new keypool: ${e}`);
             throw e;
         });
+    }
+
+    public async getBlockTemplate(params: GetBlockTemplateParams): Promise<BlockTemplate | null> {
+        this.debugMessage('getBlockTemplate');
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const result: BlockTemplate | null = (await this.rpc
+            .getblocktemplate(params)
+            .catch((e: unknown) => {
+                this.error(`Error getting block template: ${e}`);
+                return null;
+            })) as BlockTemplate | null;
+
+        return result || null;
+    }
+
+    public async submitBlock(blockHex: string): Promise<string | null> {
+        this.debugMessage('submitBlock');
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        // submitblock returns null on success, or a rejection reason string on failure
+        return (await this.rpc.submitblock({ hexdata: blockHex }).catch((e: unknown) => {
+            this.error(`Error submitting block: ${e}`);
+            throw e;
+        })) as string | null;
     }
 
     /**
