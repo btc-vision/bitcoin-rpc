@@ -3,4 +3,5 @@ export interface RPCConfig {
     BITCOIND_PORT: number;
     BITCOIND_USERNAME: string;
     BITCOIND_PASSWORD: string;
+    BITCOIND_HTTPS?: boolean;
 }

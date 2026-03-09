@@ -126,7 +126,7 @@ export class BitcoinRPC extends Logger {
 
     public getRpcConfigFromBlockchainConfig(rpcInfo: RPCConfig): RPCIniOptions {
         return {
-            url: `http://${rpcInfo.BITCOIND_HOST}`,
+            url: `${rpcInfo.BITCOIND_HTTPS ? 'https' : 'http'}://${rpcInfo.BITCOIND_HOST}`,
             port: rpcInfo.BITCOIND_PORT,
             user: rpcInfo.BITCOIND_USERNAME,
             pass: rpcInfo.BITCOIND_PASSWORD,
