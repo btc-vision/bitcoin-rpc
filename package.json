@@ -48,7 +48,6 @@
         "@btc-vision/bsi-common": "^1.2.1",
         "@eslint/js": "^10.0.1",
         "rpc-request": "^9.0.0",
-        "ts-node": "^10.9.2",
         "undici": "^7.22.0"
     }
 }
