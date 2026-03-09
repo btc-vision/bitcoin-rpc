@@ -1,7 +1,7 @@
 {
     "name": "@btc-vision/bitcoin-rpc",
     "type": "module",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "description": "The one and only fully typed Bitcoin RPC client for Node.js",
     "main": "build/index.js",
     "types": "build/index.d.ts",
@@ -16,7 +16,8 @@
     "scripts": {
         "watch": "tsc --watch",
         "start": "cd build && node index",
-        "build": "eslint src && tsc"
+        "build": "eslint src && tsc",
+        "test": "vitest run"
     },
     "publishConfig": {
         "access": "public",
@@ -25,12 +26,12 @@
     "author": "BlobMaster41",
     "license": "MIT",
     "devDependencies": {
-        "@babel/preset-env": "^7.29.0",
-        "@types/node": "^25.3.0",
-        "eslint": "^10.0.1",
+        "@types/node": "^25.3.5",
+        "eslint": "^10.0.3",
         "prettier": "3.8.1",
         "typescript": "^5.9.3",
-        "typescript-eslint": "^8.56.0"
+        "typescript-eslint": "^8.56.1",
+        "vitest": "^4.0.18"
     },
     "repository": {
         "type": "git",
