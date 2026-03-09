@@ -36,6 +36,7 @@ import {
     SendRawTransactionParams,
     SimulateRawTransactionParams,
     SubmitPackageParams,
+    TestmemPoolAcceptParams,
     TxId,
     UpgradeWalletParams,
     Verbose,
@@ -88,6 +89,7 @@ import {
     SendAllResult,
     SendResult,
     SimulateTransactionResult,
+    TestMempoolAcceptResult,
     UpgradeWalletResult,
     WalletDescriptor,
 } from './types/NewMethods.js';
@@ -1167,6 +1169,32 @@ export class BitcoinRPC extends Logger {
             })) as string | null;
 
         return txId || null;
+    }
+
+    /**
+     * @description Returns result of mempool acceptance tests indicating if raw transaction(s) would be accepted by mempool.
+     */
+    public async testMempoolAccept(
+        rawtxs: string[],
+        maxfeerate?: number | string,
+    ): Promise<TestMempoolAcceptResult[]> {
+        this.debugMessage(`testMempoolAccept with ${rawtxs.length} transactions`);
+
+        if (!this.rpc) {
+            throw new Error('RPC not initialized');
+        }
+
+        const params: TestmemPoolAcceptParams = {
+            rawtxs,
+            maxfeerate,
+        };
+
+        const result = await this.rpc.testmempoolaccept(params).catch((e: unknown) => {
+            this.error(`Error testing mempool accept: ${e}`);
+            throw e;
+        });
+
+        return result as TestMempoolAcceptResult[];
     }
 
     public async decodeRawTransaction(

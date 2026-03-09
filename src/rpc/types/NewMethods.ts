@@ -79,23 +79,43 @@ export interface NodeAddress {
     network: string;
 }
 
+export interface TestMempoolAcceptFees {
+    base: number;
+    'effective-feerate': number;
+    'effective-includes': string[];
+}
+
+export interface TestMempoolAcceptResult {
+    txid: string;
+    wtxid: string;
+    'package-error'?: string;
+    allowed?: boolean;
+    vsize?: number;
+    fees?: TestMempoolAcceptFees;
+    'reject-reason'?: string;
+    'reject-details'?: string;
+}
+
+export interface PackageTxFees {
+    base: number;
+    'effective-feerate'?: number;
+    'effective-includes'?: string[];
+}
+
+export interface PackageTxResult {
+    txid: string;
+    'other-wtxid'?: string;
+    vsize?: number;
+    fees?: PackageTxFees;
+    error?: string;
+}
+
 export interface PackageResult {
     package_msg: string;
-    tx_results: {
-        [txid: string]: {
-            txid: string;
-            other_wtxid?: string;
-            vsize: number;
-            fees: {
-                base: number;
-                effective_feerate: number;
-                effective_includes: string[];
-            };
-            error?: string;
-        };
+    'tx-results': {
+        [wtxid: string]: PackageTxResult;
     };
-    replaced_transactions?: string[];
-    package_feerate?: number;
+    'replaced-transactions'?: string[];
 }
 
 export interface IndexInfo {
